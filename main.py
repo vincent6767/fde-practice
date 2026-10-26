@@ -1,5 +1,6 @@
 from enum import StrEnum
 from pydantic import BaseModel, Field, ConfigDict
+from fastapi import FastAPI
 
 class Severity(StrEnum):
     LOW = "Low"
@@ -18,10 +19,7 @@ class IncidentAnalysisResponse(BaseModel):
     possible_causes: list[str] = Field(..., description="A list of possible causes for the incident.")
     recommended_next_steps: list[str] = Field(..., description="Recommended next steps to resolve the incident.")
 
-def analyze_incident(description: str) -> dict:
-    if not description.strip():
-        return {"error": "Description cannot be empty."}
-    
+def analyze_incident(description: str) -> dict:  
     return {
         "severity": "High",
         "summary": "The incident involves a critical system failure affecting multiple users.",
@@ -34,6 +32,12 @@ def analyze_incident(description: str) -> dict:
             "Restart the affected systems",]
     }
 
-print(analyze_incident("Login is broken"))
-print(analyze_incident(""))
-print(analyze_incident("   "))
+app = FastAPI()
+
+@app.post("/analyze-incident", response_model=IncidentAnalysisResponse)
+def analyze_incident_endpoint(incident_request: IncidentRequest):
+    description = incident_request.description
+    
+    result = analyze_incident(description)
+   
+    return IncidentAnalysisResponse(**result)
